@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { createProjectSchema } from '@/lib/validations'
 import { parseJSON, stringifyJSON } from '@/lib/utils'
+import { ProjectStatus } from '@prisma/client'
 
 /**
  * GET /api/projects
@@ -11,10 +12,39 @@ import { parseJSON, stringifyJSON } from '@/lib/utils'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
+    const statusParam = searchParams.get('status')
+
+    // Validate status parameter against enum values
+    let status: ProjectStatus | undefined
+    if (statusParam) {
+      const validStatuses = Object.values(ProjectStatus)
+      if (!validStatuses.includes(statusParam as ProjectStatus)) {
+        return NextResponse.json(
+          { error: 'Invalid status parameter. Must be one of: IDEA, BUILDING, SHIPPED, PAUSED' },
+          { status: 400 }
+        )
+      }
+      status = statusParam as ProjectStatus
+    }
 
     const projects = await db.project.findMany({
       where: status ? { status } : undefined,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        techStack: true,
+        status: true,
+        liveUrl: true,
+        repoUrl: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: { entries: true, resources: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
       select: {
         id: true,
         name: true,

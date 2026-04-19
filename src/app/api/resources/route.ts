@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { createResourceSchema } from '@/lib/validations'
+import { ResourceCategory } from '@prisma/client'
 
 /**
  * GET /api/resources
@@ -10,11 +11,24 @@ import { createResourceSchema } from '@/lib/validations'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const category = searchParams.get('category')
+    const categoryParam = searchParams.get('category')
     const isRead = searchParams.get('isRead')
     const isFavorite = searchParams.get('isFavorite')
     const skip = parseInt(searchParams.get('skip') ?? '0')
     const take = parseInt(searchParams.get('take') ?? '20')
+
+    // Validate category parameter against enum values
+    let category: ResourceCategory | undefined
+    if (categoryParam) {
+      const validCategories = Object.values(ResourceCategory)
+      if (!validCategories.includes(categoryParam as ResourceCategory)) {
+        return NextResponse.json(
+          { error: 'Invalid category parameter. Must be one of: DOCUMENTATION, TUTORIAL, ARTICLE, VIDEO, TOOL, LIBRARY, OTHER' },
+          { status: 400 }
+        )
+      }
+      category = categoryParam as ResourceCategory
+    }
 
     const where: any = {}
     if (category) where.category = category
