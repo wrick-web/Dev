@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Entry model for storing learning journal entries.
+/// Each entry can be tagged and associated with a project.
+/// Supports markdown body for rich content.
+model Entry {
+  id        String   @id @default(cuid())
+  title     String
+  body      String   // Markdown content
+  tags      String   @default("[]") // JSON array of tags stored as string
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  resources Resource[] // Resources can be linked to entries
+
+  @@index([projectId])
+  @@index([date])
+}
+
+/// Project model for tracking development projects.
+/// Stores project metadata including tech stack and current status.
+model Project {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  description String?
+  techStack String   @default("[]") // JSON array of tech stack items
+  status    ProjectStatus @default(IDEA)
+  liveUrl   String?
+  repoUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entries   Entry[]
+  resources Resource[]
+
+  @@index([status])
+}
+
+/// Resource model for collecting and organizing learning resources.
+/// Supports categorization and favoriting for easy discovery.
+model Resource {
+  id        String   @id @default(cuid())
+  url       String
+  title     String
+  category  ResourceCategory
+  notes     String?
+  isRead    Boolean  @default(false)
+  isFavorite Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entryId   String?
+  entry     Entry?   @relation(fields: [entryId], references: [id], onDelete: SetNull)
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([isRead])
+  @@index([isFavorite])
+  @@index([entryId])
+  @@index([projectId])
+}
+
+enum ProjectStatus {
+  IDEA
+  BUILDING
+  SHIPPED
+  PAUSED
+}
+
+enum ResourceCategory {
+  DOCUMENTATION
+  TUTORIAL
+  ARTICLE
+  VIDEO
+  TOOL
+  LIBRARY
+  OTHER
+}
