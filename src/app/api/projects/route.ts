@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     const projects = await db.project.findMany({
-      where: status ? { status: status as ProjectStatus } : undefined,
+      where: status ? { status: status as any } : {},
       select: {
         id: true,
         name: true,
