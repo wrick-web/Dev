@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   BookOpen,
   FolderOpen,
-  BookmarkSquare,
+  Bookmark,
   BarChart3,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -14,7 +14,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
   { href: '/entries', label: 'Entries', icon: BookOpen },
   { href: '/projects', label: 'Projects', icon: FolderOpen },
-  { href: '/resources', label: 'Resources', icon: BookmarkSquare },
+  { href: '/resources', label: 'Resources', icon: Bookmark },
 ]
 
 /**

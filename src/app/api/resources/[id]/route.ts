@@ -8,11 +8,13 @@ import { updateResourceSchema } from '@/lib/validations'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
+
   try {
     const resource = await db.resource.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         url: true,
@@ -37,7 +39,7 @@ export async function GET(
 
     return NextResponse.json(resource)
   } catch (error) {
-    console.error(`GET /api/resources/${params.id} error:`, error)
+    console.error(`GET /api/resources/${id} error:`, error)
     return NextResponse.json(
       { error: 'Failed to fetch resource' },
       { status: 500 }
@@ -51,8 +53,10 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
+
   try {
     const body = await request.json()
 
@@ -61,7 +65,7 @@ export async function PUT(
 
     // Check if resource exists
     const existingResource = await db.resource.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!existingResource) {
@@ -72,7 +76,7 @@ export async function PUT(
     }
 
     const resource = await db.resource.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         url: validatedData.url,
         title: validatedData.title,
@@ -100,7 +104,7 @@ export async function PUT(
 
     return NextResponse.json(resource)
   } catch (error: any) {
-    console.error(`PUT /api/resources/${params.id} error:`, error)
+    console.error(`PUT /api/resources/${id} error:`, error)
 
     if (error.name === 'ZodError') {
       return NextResponse.json(
@@ -122,11 +126,13 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
+
   try {
     const resource = await db.resource.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!resource) {
@@ -137,7 +143,7 @@ export async function DELETE(
     }
 
     await db.resource.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json(
@@ -145,7 +151,7 @@ export async function DELETE(
       { status: 200 }
     )
   } catch (error) {
-    console.error(`DELETE /api/resources/${params.id} error:`, error)
+    console.error(`DELETE /api/resources/${id} error:`, error)
     return NextResponse.json(
       { error: 'Failed to delete resource' },
       { status: 500 }

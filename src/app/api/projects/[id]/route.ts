@@ -9,11 +9,13 @@ import { parseJSON, stringifyJSON } from '@/lib/utils'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
+
   try {
     const project = await db.project.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         name: true,
@@ -39,7 +41,7 @@ export async function GET(
       techStack: parseJSON(project.techStack, []),
     })
   } catch (error) {
-    console.error(`GET /api/projects/${params.id} error:`, error)
+    console.error(`GET /api/projects/${id} error:`, error)
     return NextResponse.json(
       { error: 'Failed to fetch project' },
       { status: 500 }
@@ -53,8 +55,10 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
+
   try {
     const body = await request.json()
 
@@ -63,7 +67,7 @@ export async function PUT(
 
     // Check if project exists
     const existingProject = await db.project.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!existingProject) {
@@ -74,7 +78,7 @@ export async function PUT(
     }
 
     const project = await db.project.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: validatedData.name,
         description: validatedData.description ?? existingProject.description,
@@ -103,7 +107,7 @@ export async function PUT(
       techStack: parseJSON(project.techStack, []),
     })
   } catch (error: any) {
-    console.error(`PUT /api/projects/${params.id} error:`, error)
+    console.error(`PUT /api/projects/${id} error:`, error)
 
     if (error.name === 'ZodError') {
       return NextResponse.json(
@@ -125,11 +129,13 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
+
   try {
     const project = await db.project.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!project) {
@@ -140,7 +146,7 @@ export async function DELETE(
     }
 
     await db.project.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json(
@@ -148,7 +154,7 @@ export async function DELETE(
       { status: 200 }
     )
   } catch (error) {
-    console.error(`DELETE /api/projects/${params.id} error:`, error)
+    console.error(`DELETE /api/projects/${id} error:`, error)
     return NextResponse.json(
       { error: 'Failed to delete project' },
       { status: 500 }

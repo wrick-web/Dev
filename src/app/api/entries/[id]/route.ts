@@ -9,11 +9,13 @@ import { parseJSON, stringifyJSON } from '@/lib/utils'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
+
   try {
     const entry = await db.entry.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         title: true,
@@ -38,7 +40,7 @@ export async function GET(
       tags: parseJSON(entry.tags, []),
     })
   } catch (error) {
-    console.error(`GET /api/entries/${params.id} error:`, error)
+    console.error(`GET /api/entries/${id} error:`, error)
     return NextResponse.json(
       { error: 'Failed to fetch entry' },
       { status: 500 }
@@ -52,8 +54,10 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
+
   try {
     const body = await request.json()
 
@@ -62,7 +66,7 @@ export async function PUT(
 
     // Check if entry exists
     const existingEntry = await db.entry.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!existingEntry) {
@@ -73,7 +77,7 @@ export async function PUT(
     }
 
     const entry = await db.entry.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         title: validatedData.title,
         body: validatedData.body,
@@ -97,7 +101,7 @@ export async function PUT(
       tags: parseJSON(entry.tags, []),
     })
   } catch (error: any) {
-    console.error(`PUT /api/entries/${params.id} error:`, error)
+    console.error(`PUT /api/entries/${id} error:`, error)
 
     if (error.name === 'ZodError') {
       return NextResponse.json(
@@ -119,11 +123,13 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
+
   try {
     const entry = await db.entry.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!entry) {
@@ -134,7 +140,7 @@ export async function DELETE(
     }
 
     await db.entry.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json(
@@ -142,7 +148,7 @@ export async function DELETE(
       { status: 200 }
     )
   } catch (error) {
-    console.error(`DELETE /api/entries/${params.id} error:`, error)
+    console.error(`DELETE /api/entries/${id} error:`, error)
     return NextResponse.json(
       { error: 'Failed to delete entry' },
       { status: 500 }
